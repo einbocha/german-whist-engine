@@ -1,6 +1,7 @@
 use einbocha_playing_cards::{CardSet, DECK_52, PlayingCard, Suit};
-use rand::{Rng, RngExt, rng, seq::SliceRandom};
+use rand::{Rng, RngExt, seq::SliceRandom};
 
+/// The enum defines both players of the game (A or B).
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Player {
     A,
@@ -8,6 +9,7 @@ pub enum Player {
 }
 
 impl Player {
+    /// Get the other player.
     pub fn other(&self) -> Self {
         match self {
             Player::A => Player::B,
@@ -15,6 +17,7 @@ impl Player {
         }
     }
 
+    /// Returns the player's unique ID to index associated datastructures.
     pub fn id(&self) -> usize {
         match self {
             Player::A => 0,
@@ -22,8 +25,9 @@ impl Player {
         }
     }
 
+    /// Get a random player.
     pub fn random<R: Rng>(rng: &mut R) -> Self {
-        if (&mut *rng).random_bool(0.5) {
+        if rng.random_bool(0.5) {
             Player::A
         } else {
             Player::B
@@ -31,21 +35,24 @@ impl Player {
     }
 }
 
+/// All information available / visible to the player.
 #[derive(Debug)]
 pub struct View {
-    pub tricks: [usize; 2],
-    pub turn: usize,
-    pub table: Option<PlayingCard>,
+    pub tricks: [u8; 2],
+    pub current_player: Player,
+    pub turn: u8,
+    pub table: [Option<PlayingCard>; 2],
     pub top_card: Option<PlayingCard>,
     pub trump: Suit,
     pub hand: CardSet,
 }
 
+/// Deterministic game state.
 #[derive(Clone, Debug)]
 pub struct GameState {
-    tricks: [usize; 2],
+    tricks: [u8; 2],
     current_player: Player,
-    turn: usize,
+    turn: u8,
     deck: Vec<PlayingCard>,
     table: [Option<PlayingCard>; 2],
     top_card: Option<PlayingCard>,
@@ -54,24 +61,25 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub fn initial_state() -> Self {
+    /// Creates a new randomized initial game state.
+    pub fn initial_state<R: Rng>(rng: &mut R) -> Self {
         let mut deck: Vec<PlayingCard> = Vec::from(DECK_52);
-        (&mut deck).shuffle(&mut rng());
+        (&mut deck).shuffle(rng);
 
         let mut player_hands: [CardSet; 2] = [CardSet::new(), CardSet::new()];
 
         for _ in 0..13 {
             for i in 0_usize..2 {
-                player_hands[i].add((&mut deck).pop().unwrap());
+                player_hands[i].add(deck.pop().unwrap());
             }
         }
 
-        let top_card: PlayingCard = (&mut deck).pop().unwrap();
+        let top_card: PlayingCard = deck.pop().unwrap();
         let trump: Suit = top_card.suit();
 
         Self {
             tricks: [0, 0],
-            current_player: Player::random(&mut rng()),
+            current_player: Player::random(rng),
             turn: 0,
             deck,
             player_hands,
@@ -81,92 +89,96 @@ impl GameState {
         }
     }
 
-    pub fn god_view(&self) {
-        todo!("create new GodView struct")
-    }
-
+    /// Get all not hidden information that is not secret to a player.
     pub fn spectator_view(&self) {
         todo!("create new SpectatorView struct")
     }
 
-    /// Why does the player view only contain the opponents card on the table?
+    /// Get the player's view on the game.
     pub fn player_view(&self, player: Player) -> View {
         View {
             tricks: self.tricks,
+            current_player: self.current_player,
             turn: self.turn,
-            table: self.table[player.other().id()],
+            table: self.table,
             top_card: self.top_card,
             trump: self.trump,
             hand: self.player_hands[player.id()],
         }
     }
 
-    /// What if the player itself has already played a card?
-    /// Where is the current player check, i.e. what if it is not the current player?
+    /// Determines which cards a player can play at the moment.
     pub fn legal_actions(&self, player: Player) -> CardSet {
-        if let Some(card) = self.table[player.other().id()] {
-            let mut following: CardSet = self.player_hands[player.id()];
-            following.filter_by_suit(card.suit());
+        if player != self.current_player {
+            return CardSet::new(); // Not current player => may not play any card
+        }
 
-            if following.is_empty() {
+        // => player has to make an action
+        // The player's table card slot has to be empty
+
+        if let Some(card) = self.table[player.other().id()] {
+            let mut filtered_hand: CardSet = self.player_hands[player.id()];
+            filtered_hand.filter_by_suit(card.suit());
+
+            if filtered_hand.is_empty() {
+                // player can choose freely
                 self.player_hands[player.id()]
             } else {
-                following
+                // player has to follow suit
+                filtered_hand
             }
         } else {
             self.player_hands[player.id()]
         }
     }
 
+    /// Get the player whose turn it is right now.
     pub fn current_player(&self) -> Player {
         self.current_player
     }
 
+    /// Have both players already played their card for this turn?
     fn end_of_round(&self) -> bool {
         self.turn % 2 == 0
     }
 
+    /// Is the game still in the phase where tricks don't count as points?
     fn phase_one(&self) -> bool {
         self.top_card.is_some()
     }
 
-    /// Compare player with the current player as an additional check
+    /// Checks whether the player can play this card right now.
+    /// The player has to be the current player.
     pub fn if_legal_apply_action(&mut self, player: Player, action: PlayingCard) {
         if !self.legal_actions(player).contains(action) {
             return;
         }
-
+        // => action (the card) is legal => can be removed from the hand
         self.player_hands[player.id()].remove(action);
-        (&mut self.table)[player.id()] = Some(action);
+        self.table[player.id()] = Some(action);
 
         self.turn += 1;
 
         if self.end_of_round() {
             let second_player: Player = player;
             let first_player: Player = second_player.other();
+            // there are two cards on the table
+            let second_card: PlayingCard = self.table[second_player.id()].unwrap();
+            let first_card: PlayingCard = self.table[first_player.id()].unwrap();
 
-            let second_card: PlayingCard = (&mut self.table)[second_player.id()].unwrap();
-            let first_card: PlayingCard = (&mut self.table)[first_player.id()].unwrap();
-
-            let winner: Player;
-            if first_card.suit() == self.trump && second_card.suit() != self.trump {
-                winner = first_player;
-            } else if second_card.suit() == self.trump && first_card.suit() != self.trump {
-                winner = second_player;
-            } else if second_card.suit() == first_card.suit() {
-                if first_card.rank() > second_card.rank() {
-                    winner = first_player;
-                } else {
-                    winner = second_player;
-                }
+            let winner = if second_card.suit() == first_card.suit() {
+                if first_card.rank() > second_card.rank() { first_player } else { second_player }
+            } else if second_card.suit() == self.trump {
+                second_player
             } else {
-                winner = first_player;
-            }
+                first_player
+            };
+
 
             if self.phase_one() {
-                self.player_hands[winner.id()].add((&mut self.top_card).unwrap());
-                self.player_hands[winner.other().id()].add((&mut self.deck).pop().unwrap());
-                self.top_card = (&mut self.deck).pop();
+                self.player_hands[winner.id()].add(self.top_card.unwrap());
+                self.player_hands[winner.other().id()].add(self.deck.pop().unwrap());
+                self.top_card = self.deck.pop();
             } else {
                 self.tricks[winner.id()] += 1;
             }
@@ -178,10 +190,12 @@ impl GameState {
         }
     }
 
+    /// Is the game over?
     pub fn finished(&self) -> bool {
         self.turn > 51
     }
 
+    /// Does a player won the game and which player has won the game?
     pub fn winner(&self) -> Option<Player> {
         if self.finished() {
             let player_a: Player = Player::A;
@@ -191,7 +205,7 @@ impl GameState {
             } else if self.tricks[player_b.id()] > self.tricks[player_a.id()] {
                 Some(player_b)
             } else {
-                panic!("Impossible to have a draw")
+                unreachable!("Impossible to have a draw")
             }
         } else {
             None
