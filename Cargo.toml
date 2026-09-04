@@ -11,4 +11,4 @@ categories = ["games", "simulation", "data-structures"]
 
 [dependencies]
 rand = "0.10.2"
-einbocha-playing-cards = { git = "https://github.com/einbocha/einbocha-playing-cards" }
+einbocha-playing-cards = "0.1.2"

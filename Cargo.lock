@@ -30,8 +30,9 @@ dependencies = [
 
 [[package]]
 name = "einbocha-playing-cards"
-version = "0.1.1"
-source = "git+https://github.com/einbocha/einbocha-playing-cards#fd93a533f2b80961cf641385377b94c3a8f5cdff"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "45ac0ed04401ab0791f0745953ddb1e672fd4f22005e5bb134d71287876cace2"
 
 [[package]]
 name = "german-whist-engine"
