@@ -2,7 +2,7 @@
 [![Crates.io](https://img.shields.io/crates/v/german-whist-engine?style=for-the-badge&color=fc8d62&logo=rust)](https://crates.io/crates/german-whist-engine)
 [![Total Downloads](https://img.shields.io/crates/d/german-whist-engine?style=for-the-badge&color=fc8d62&logo=rust)](https://crates.io/crates/german-whist-engine)
 [![Docs.rs](https://img.shields.io/docsrs/german-whist-engine?style=for-the-badge&logo=docs.rs)](https://docs.rs/german-whist-engine)
-[![License](https://img.shields.io/crates/l/german-whist?style=for-the-badge)](https://github.com/einbocha/german-whist/blob/main/LICENSE)
+[![License](https://img.shields.io/crates/l/german-whist-engine?style=for-the-badge)](https://github.com/einbocha/german-whist-engine/blob/main/LICENSE)
 
 # german-whist-engine
 A deterministic game engine / state machine for the card game [German Whist](../engine/german_whist_rules.md).
