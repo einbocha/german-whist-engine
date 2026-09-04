@@ -1,0 +1,10 @@
+[workspace]
+channels = ["conda-forge"]
+name = "german-whist-engine"
+platforms = ["osx-arm64", "linux-64"]
+
+[tasks]
+
+[dependencies]
+rust = "*"
+rust-src = "*" # necessary for IDE support

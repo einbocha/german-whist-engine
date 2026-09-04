@@ -1,0 +1,14 @@
+[package]
+name = "german-whist-engine"
+version = "0.1.0"
+edition = "2024"
+description = "Public on Crates.io - Deterministic game engine for the playing card game. Written in rust."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/einbocha/german-whist"
+readme = "README.md"
+keywords = ["cards", "playing-cards", "german-whist", "game-engine", "simulation"]
+categories = ["games", "simulation", "data-structures"]
+
+[dependencies]
+rand = "0.10.2"
+einbocha-playing-cards = { git = "https://github.com/einbocha/einbocha-playing-cards" }
