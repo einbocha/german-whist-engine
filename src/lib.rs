@@ -1,3 +1,6 @@
+#[cfg(feature = "strategies")]
+pub mod strategies;
+
 use einbocha_playing_cards::{CardSet, DECK_52, PlayingCard, Suit};
 use rand::{Rng, RngExt, seq::SliceRandom};
 
@@ -118,7 +121,7 @@ impl GameState {
 
         if let Some(card) = self.table[player.other().id()] {
             let mut filtered_hand: CardSet = self.player_hands[player.id()];
-            filtered_hand.filter_by_suit(card.suit());
+            filtered_hand.filter_by_mask(CardSet::mask_suit(card.suit()));
 
             if filtered_hand.is_empty() {
                 // player can choose freely
@@ -167,13 +170,16 @@ impl GameState {
             let first_card: PlayingCard = self.table[first_player.id()].unwrap();
 
             let winner = if second_card.suit() == first_card.suit() {
-                if first_card.rank() > second_card.rank() { first_player } else { second_player }
+                if first_card.rank() > second_card.rank() {
+                    first_player
+                } else {
+                    second_player
+                }
             } else if second_card.suit() == self.trump {
                 second_player
             } else {
                 first_player
             };
-
 
             if self.phase_one() {
                 self.player_hands[winner.id()].add(self.top_card.unwrap());
