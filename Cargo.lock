@@ -36,7 +36,7 @@ checksum = "12377a2b7d4b1cf22051d81209cfd352377d4b2fe63d3c369b6ec8f4a7d424db"
 
 [[package]]
 name = "german-whist-engine"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "einbocha-playing-cards",
  "rand",
