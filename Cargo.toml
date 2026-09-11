@@ -12,7 +12,3 @@ categories = ["games", "simulation", "data-structures"]
 [dependencies]
 rand = "0.10.2"
 einbocha-playing-cards = "0.1.3"
-
-[features]
-default = []
-strategies = []

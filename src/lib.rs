@@ -1,4 +1,3 @@
-#[cfg(feature = "strategies")]
 pub mod strategies;
 
 use einbocha_playing_cards::{CardSet, DECK_52, PlayingCard, Suit};
